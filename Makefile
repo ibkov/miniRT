@@ -1,49 +1,24 @@
-NAME = miniRT.a
+NAME = my_screen
 
-TEST = miniRT
-
-FLAGS = -Wall -Wextra -Werror
-
-LIBFT = libft
-
-DIR_L = srcs/
-
-INCLUDES = -I includes/ -I libft/
-
-LIST = 		miniRT.c
+SRC = miniRT.c \
 
 
-OBJS =$(SRCS:.c=.o)
-
-SRCS = $(addprefix $(DIR_L), $(LIST))
+OBJ = $(SRC:.c=.o)
 
 all: $(NAME)
 
-$(NAME): my_lib $(OBJS)
-	cp libft/libft.a ./$(NAME)
-	ar rc $(NAME) $(OBJS)
-	ranlib $(NAME)
-
-my_lib: 
-	make -C $(LIBFT)
-
-%.o: %.c includes/ft_printf.h
-	gcc -g $(FLAGS) $(INCLUDES) -c $< -o $@
-
-test: $(NAME)
-	gcc -g $(INCLUDES) srcs/main.c -lftprintf -L. -o $(TEST)
+$(NAME): $(OBJ)
+		make -C minilibx_opengl_20191021
+		mv minilibx_opengl_20191021/libmlx.a .
+		gcc -Wall -g -Werror -Wextra -c $(SRC)
+		gcc -Wall -g -Werror -Wextra -L. -lmlx -framework OpenGL -framework Appkit $(OBJ) -o $(NAME)
 
 clean:
-	rm -f $(OBJS)
-	make clean -C $(LIBFT)
+		make -C minilibx_opengl_20191021 clean
+		rm -rf $(OBJ) libft.a libmlx.a
 
 fclean: clean
-	rm -f $(NAME)
-	make fclean -C $(LIBFT)
+		make -C minilibx clean
+		rm -rf $(NAME)
 
-tclean:
-	rm $(TEST)
-
-re: fclean all
-
-.PHONY: fclean re norme all clean
+re : fclean all
