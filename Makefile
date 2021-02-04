@@ -1,6 +1,6 @@
 NAME = my_screen
 
-SRC = miniRT.c \
+SRC = cude.c \
 
 
 OBJ = $(SRC:.c=.o)
