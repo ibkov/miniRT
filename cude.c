@@ -53,17 +53,17 @@ void verLine(int x, int drawStart, int drawEnd, int color, t_mlx mlx)
     }
 }
 
-int draw_ray_casting(pos_gamer *pos, t_mlx mlx)
+int draw_ray_casting(t_mlx *mlx)
 {
   for(int x = 0; x < WIN_WIDTH; x++)
     {
       //calculate ray position and direction
       double cameraX = 2 * x / (double)WIN_WIDTH - 1; //x-coordinate in camera space
-      double rayDirX = pos->dirX + pos->planeX * cameraX;
-      double rayDirY = pos->dirY + pos->planeY * cameraX;
+      double rayDirX = mlx->pos.dirX + mlx->pos.planeX * cameraX;
+      double rayDirY = mlx->pos.dirY + mlx->pos.planeY * cameraX;
       //which box of the map we're in
-      int mapX = (int)(pos->posX);
-      int mapY = (int)(pos->posY);
+      int mapX = (int)(mlx->pos.posX);
+      int mapY = (int)(mlx->pos.posY);
 
       //length of ray from current position to next x or y-side
       double sideDistX;
@@ -84,22 +84,22 @@ int draw_ray_casting(pos_gamer *pos, t_mlx mlx)
       if(rayDirX < 0)
       {
         stepX = -1;
-        sideDistX = (pos->posX - mapX) * deltaDistX;
+        sideDistX = (mlx->pos.posX - mapX) * deltaDistX;
       }
       else
       {
         stepX = 1;
-        sideDistX = (mapX + 1.0 - pos->posX) * deltaDistX;
+        sideDistX = (mapX + 1.0 - mlx->pos.posX) * deltaDistX;
       }
       if(rayDirY < 0)
       {
         stepY = -1;
-        sideDistY = (pos->posY - mapY) * deltaDistY;
+        sideDistY = (mlx->pos.posY - mapY) * deltaDistY;
       }
       else
       {
         stepY = 1;
-        sideDistY = (mapY + 1.0 - pos->posY) * deltaDistY;
+        sideDistY = (mapY + 1.0 - mlx->pos.posY) * deltaDistY;
       }
       //perform DDA
       while (hit == 0)
@@ -121,8 +121,8 @@ int draw_ray_casting(pos_gamer *pos, t_mlx mlx)
         if(worldMap[mapX][mapY] > 0) hit = 1;
       }
       //Calculate distance projected on camera direction (Euclidean distance will give fisheye effect!)
-      if(side == 0) perpWallDist = (mapX - pos->posX + (1 - stepX) / 2) / rayDirX;
-      else          perpWallDist = (mapY - pos->posY + (1 - stepY) / 2) / rayDirY;
+      if(side == 0) perpWallDist = (mapX - mlx->pos.posX + (1 - stepX) / 2) / rayDirX;
+      else          perpWallDist = (mapY - mlx->pos.posY + (1 - stepY) / 2) / rayDirY;
 
       //Calculate height of line to draw on screen
       int lineHeight = (int)(WIN_HEIGHT / perpWallDist);
@@ -166,24 +166,14 @@ int draw_ray_casting(pos_gamer *pos, t_mlx mlx)
       if(side == 5) {color = yellow_color / 1.2;}
 
       //draw the pixels of the stripe as a vertical line
-      verLine(x, drawStart, drawEnd, color, mlx);
+      verLine(x, drawStart, drawEnd, color, *mlx);
     }
     return (0);
 }
 
-int close(int keycode, pos_gamer *pos)
-{
-    if (keycode == 126)
-    {
-      pos->posX++;
-      // mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
-    }
-    return(0);
-}
-
 void init_position(pos_gamer *pos)
 {
-  pos->posX = 22;
+  pos->posX = 21;
   pos->posY = 12;  //x and y start position
   pos->dirX = -1;
   pos->dirY = 0; //initial direction vector
@@ -191,11 +181,22 @@ void init_position(pos_gamer *pos)
   pos->planeY = 0.66; //the 2d raycaster version of camera plane
 }
 
+int close(int keycode, t_mlx *mlx)
+{
+    if (keycode == 126)
+    {
+      mlx_clear_window(mlx->mlx_ptr, mlx->win);
+      mlx->pos.posX--;
+      draw_ray_casting(mlx);
+      mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
+    }
+    return(0);
+}
+
 int main()
 {
-pos_gamer pos;
 t_mlx	mlx;
-init_position(&pos);
+init_position(&mlx.pos);
 // double time = 0; //time of current frame
 // double oldTime = 0; //time of previous frame
 
@@ -207,13 +208,11 @@ mlx.img.img_ptr = mlx_new_image(mlx.mlx_ptr, WIN_WIDTH, WIN_HEIGHT);
 
 mlx.img.data = (int *)mlx_get_data_addr(mlx.img.img_ptr, &mlx.img.bpp, &mlx.img.size_l,
 		&mlx.img.endian);
-while(1){
-draw_ray_casting(&pos, mlx);
-mlx_hook(mlx.win, 2, 1L<<0, close, &pos);
+draw_ray_casting(&mlx);
+mlx_hook(mlx.win, 2, 1L<<0, close, &mlx);
 mlx_put_image_to_window(mlx.mlx_ptr, mlx.win, mlx.img.img_ptr, 0, 0);
-mlx_clear_window(mlx.mlx_ptr, mlx.win);
 // mlx_hook(mlx.win, 2, 1L<<0, close, &posX);
 mlx_loop(mlx.mlx_ptr);
-}
+
 return (0);
 }
