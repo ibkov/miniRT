@@ -1,9 +1,20 @@
 # include <mlx.h>
 # include "includes/miniRT.h"
 # include <math.h>
+# include <stdio.h> 
 
 #define mapWidth 24
 #define mapHeight 24
+// int worldMap[mapWidth][mapHeight]=
+// {
+//   {1,1,1,1,1,1},
+//   {1,0,0,2,0,1},
+//   {1,0,0,0,0,1},
+//   {1,0,0,0,0,1},
+//   {1,0,1,1,0,1},
+//   {1,1,1,1,1,1},
+// };
+
 
 int worldMap[mapWidth][mapHeight]=
 {
@@ -42,37 +53,17 @@ void verLine(int x, int drawStart, int drawEnd, int color, t_mlx mlx)
     }
 }
 
-int main()
+int draw_ray_casting(pos_gamer *pos, t_mlx mlx)
 {
-
-double posX = 22, posY = 14;  //x and y start position
-double dirX = -1, dirY = 0; //initial direction vector
-double planeX = 0, planeY = 0.66; //the 2d raycaster version of camera plane
-
-// double time = 0; //time of current frame
-// double oldTime = 0; //time of previous frame
-
-t_mlx	mlx;
-
-mlx.mlx_ptr = mlx_init();
-	//Now do the same with mlx_new_window
-mlx.win = mlx_new_window(mlx.mlx_ptr, WIN_WIDTH, WIN_HEIGHT, "A simple example");
-	//One more time with mlx_new_image
-mlx.img.img_ptr = mlx_new_image(mlx.mlx_ptr, WIN_WIDTH, WIN_HEIGHT);
-
-mlx.img.data = (int *)mlx_get_data_addr(mlx.img.img_ptr, &mlx.img.bpp, &mlx.img.size_l,
-		&mlx.img.endian);
-mlx.img.data[10 * WIN_WIDTH + 10] = 0xFFFFFF;
-
-for(int x = 0; x < WIN_WIDTH; x++)
+  for(int x = 0; x < WIN_WIDTH; x++)
     {
       //calculate ray position and direction
       double cameraX = 2 * x / (double)WIN_WIDTH - 1; //x-coordinate in camera space
-      double rayDirX = dirX + planeX * cameraX;
-      double rayDirY = dirY + planeY * cameraX;
+      double rayDirX = pos->dirX + pos->planeX * cameraX;
+      double rayDirY = pos->dirY + pos->planeY * cameraX;
       //which box of the map we're in
-      int mapX = (int)(posX);
-      int mapY = (int)(posY);
+      int mapX = (int)(pos->posX);
+      int mapY = (int)(pos->posY);
 
       //length of ray from current position to next x or y-side
       double sideDistX;
@@ -93,22 +84,22 @@ for(int x = 0; x < WIN_WIDTH; x++)
       if(rayDirX < 0)
       {
         stepX = -1;
-        sideDistX = (posX - mapX) * deltaDistX;
+        sideDistX = (pos->posX - mapX) * deltaDistX;
       }
       else
       {
         stepX = 1;
-        sideDistX = (mapX + 1.0 - posX) * deltaDistX;
+        sideDistX = (mapX + 1.0 - pos->posX) * deltaDistX;
       }
       if(rayDirY < 0)
       {
         stepY = -1;
-        sideDistY = (posY - mapY) * deltaDistY;
+        sideDistY = (pos->posY - mapY) * deltaDistY;
       }
       else
       {
         stepY = 1;
-        sideDistY = (mapY + 1.0 - posY) * deltaDistY;
+        sideDistY = (mapY + 1.0 - pos->posY) * deltaDistY;
       }
       //perform DDA
       while (hit == 0)
@@ -130,8 +121,8 @@ for(int x = 0; x < WIN_WIDTH; x++)
         if(worldMap[mapX][mapY] > 0) hit = 1;
       }
       //Calculate distance projected on camera direction (Euclidean distance will give fisheye effect!)
-      if(side == 0) perpWallDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;
-      else          perpWallDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
+      if(side == 0) perpWallDist = (mapX - pos->posX + (1 - stepX) / 2) / rayDirX;
+      else          perpWallDist = (mapY - pos->posY + (1 - stepY) / 2) / rayDirY;
 
       //Calculate height of line to draw on screen
       int lineHeight = (int)(WIN_HEIGHT / perpWallDist);
@@ -143,8 +134,21 @@ for(int x = 0; x < WIN_WIDTH; x++)
       if(drawEnd >= WIN_HEIGHT)drawEnd = WIN_HEIGHT - 1;
 
       //choose wall color
-      int color = 0xFFFFF3;
-      int color2 = 0xF456F3;
+      int color = 0xFFFFFF;
+      int red_color = 0xff3333;
+      int green_color = 0x339933;
+      int blue_color = 0x3366cc;
+      int yellow_color = 0xffff55;
+      if (worldMap[mapX][mapY] == 1)
+        color = red_color;
+      if (worldMap[mapX][mapY] == 2)
+        color = green_color;
+      if (worldMap[mapX][mapY] == 3)
+        color = blue_color;
+      if (worldMap[mapX][mapY] == 4)
+        color = 0xFFFFFF; 
+      if (worldMap[mapX][mapY] == 4)
+        color = yellow_color; 
     //   switch(worldMap[mapX][mapY])
     //   {
     //     case 1:  color = RGB_Red;    break; //red
@@ -155,16 +159,61 @@ for(int x = 0; x < WIN_WIDTH; x++)
     //   }
 
       //give x and y sides different brightness
-      if(side == 1) {color = color / 2;}
-      if(side == 3) {color = color2 / 2;}
+      if(side == 1) {color = red_color / 2;}
+      if(side == 2) {color = green_color / 1.2;}
+      if(side == 3) {color = blue_color / 1.2;}
+      if(side == 4) {color = 0xFFFFFF / 1.2;}
+      if(side == 5) {color = yellow_color / 1.2;}
 
       //draw the pixels of the stripe as a vertical line
       verLine(x, drawStart, drawEnd, color, mlx);
-    
     }
+    return (0);
+}
 
+int close(int keycode, pos_gamer *pos)
+{
+    if (keycode == 126)
+    {
+      pos->posX++;
+      // mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
+    }
+    return(0);
+}
 
+void init_position(pos_gamer *pos)
+{
+  pos->posX = 22;
+  pos->posY = 12;  //x and y start position
+  pos->dirX = -1;
+  pos->dirY = 0; //initial direction vector
+  pos->planeX = 0; 
+  pos->planeY = 0.66; //the 2d raycaster version of camera plane
+}
+
+int main()
+{
+pos_gamer pos;
+t_mlx	mlx;
+init_position(&pos);
+// double time = 0; //time of current frame
+// double oldTime = 0; //time of previous frame
+
+mlx.mlx_ptr = mlx_init();
+	//Now do the same with mlx_new_window
+mlx.win = mlx_new_window(mlx.mlx_ptr, WIN_WIDTH, WIN_HEIGHT, "A simple example");
+	//One more time with mlx_new_image
+mlx.img.img_ptr = mlx_new_image(mlx.mlx_ptr, WIN_WIDTH, WIN_HEIGHT);
+
+mlx.img.data = (int *)mlx_get_data_addr(mlx.img.img_ptr, &mlx.img.bpp, &mlx.img.size_l,
+		&mlx.img.endian);
+while(1){
+draw_ray_casting(&pos, mlx);
+mlx_hook(mlx.win, 2, 1L<<0, close, &pos);
 mlx_put_image_to_window(mlx.mlx_ptr, mlx.win, mlx.img.img_ptr, 0, 0);
+mlx_clear_window(mlx.mlx_ptr, mlx.win);
+// mlx_hook(mlx.win, 2, 1L<<0, close, &posX);
 mlx_loop(mlx.mlx_ptr);
+}
 return (0);
 }

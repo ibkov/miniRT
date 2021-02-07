@@ -41,4 +41,16 @@ typedef struct	s_mlx
 	t_img		img;
 }				t_mlx;
 
+
+typedef struct	p_gmr
+{
+	double 		posX;
+	double 		posY;
+	double		dirX;
+	double      dirY;
+	double		planeX;
+	double		planeY;
+	
+}				pos_gamer;
+
 #endif
