@@ -55,6 +55,11 @@ void verLine(int x, int drawStart, int drawEnd, int color, t_mlx mlx)
 
 int draw_ray_casting(t_mlx *mlx)
 {
+      //One more time with mlx_new_image
+      mlx->img.img_ptr = mlx_new_image(mlx->mlx_ptr, WIN_WIDTH, WIN_HEIGHT);
+
+      mlx->img.data = (int *)mlx_get_data_addr(mlx->img.img_ptr, &mlx->img.bpp, &mlx->img.size_l,
+		  &mlx->img.endian);
   for(int x = 0; x < WIN_WIDTH; x++)
     {
       //calculate ray position and direction
@@ -81,6 +86,8 @@ int draw_ray_casting(t_mlx *mlx)
       int hit = 0; //was there a wall hit?
       int side; //was a NS or a EW wall hit?
       //calculate step and initial sideDist
+
+      
       if(rayDirX < 0)
       {
         stepX = -1;
@@ -173,7 +180,7 @@ int draw_ray_casting(t_mlx *mlx)
 
 void init_position(pos_gamer *pos)
 {
-  pos->posX = 21;
+  pos->posX = 19;
   pos->posY = 12;  //x and y start position
   pos->dirX = -1;
   pos->dirY = 0; //initial direction vector
@@ -181,13 +188,45 @@ void init_position(pos_gamer *pos)
   pos->planeY = 0.66; //the 2d raycaster version of camera plane
 }
 
-int close(int keycode, t_mlx *mlx)
+int press_key(int keycode, t_mlx *mlx)
 {
     if (keycode == 126)
     {
-      mlx_clear_window(mlx->mlx_ptr, mlx->win);
+      // mlx_clear_window(mlx->mlx_ptr, mlx->win);
+      // mlx_destroy_image(mlx->mlx_ptr, mlx->win);
+      mlx->img.img_ptr = mlx_new_image(mlx->mlx_ptr, WIN_WIDTH, WIN_HEIGHT);
       mlx->pos.posX--;
       draw_ray_casting(mlx);
+      mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
+      mlx_string_put(mlx->mlx_ptr, mlx->win, 100, 100, 0xFFFFFF, ft_itoa(mlx->pos.posX));
+      mlx_string_put(mlx->mlx_ptr, mlx->win, 100, 110, 0xFFFFFF, ft_itoa(mlx->pos.posY));
+      mlx_string_put(mlx->mlx_ptr, mlx->win, 100, 120, 0xFFFFFF, ft_itoa(mlx->pos.dirX));
+      mlx_string_put(mlx->mlx_ptr, mlx->win, 100, 130, 0xFFFFFF, ft_itoa(mlx->pos.dirY));
+      mlx_string_put(mlx->mlx_ptr, mlx->win, 100, 140, 0xFFFFFF, ft_itoa(mlx->pos.planeX));
+      mlx_string_put(mlx->mlx_ptr, mlx->win, 100, 150, 0xFFFFFF, ft_itoa(mlx->pos.planeY));
+    }
+    if (keycode == 125)
+    {
+      mlx_clear_window(mlx->mlx_ptr, mlx->win);
+      mlx->pos.posX++;
+      draw_ray_casting(mlx);
+      mlx_clear_window(mlx->mlx_ptr, mlx->win);
+      mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
+    }
+    if (keycode == 123)
+    {
+      mlx_clear_window(mlx->mlx_ptr, mlx->win);
+      mlx->pos.dirY -= 0.2;
+      draw_ray_casting(mlx);
+      mlx_clear_window(mlx->mlx_ptr, mlx->win);
+      mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
+    }
+     if (keycode == 124)
+    {
+      mlx_clear_window(mlx->mlx_ptr, mlx->win);
+      mlx->pos.dirY += 0.2;
+      draw_ray_casting(mlx);
+      mlx_clear_window(mlx->mlx_ptr, mlx->win);
       mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
     }
     return(0);
@@ -197,20 +236,21 @@ int main()
 {
 t_mlx	mlx;
 init_position(&mlx.pos);
+mlx.mlx_ptr = mlx_init();
+//Now do the same with mlx_new_window
+mlx.win = mlx_new_window(mlx.mlx_ptr, WIN_WIDTH, WIN_HEIGHT, "A simple example");
 // double time = 0; //time of current frame
 // double oldTime = 0; //time of previous frame
 
-mlx.mlx_ptr = mlx_init();
-	//Now do the same with mlx_new_window
-mlx.win = mlx_new_window(mlx.mlx_ptr, WIN_WIDTH, WIN_HEIGHT, "A simple example");
-	//One more time with mlx_new_image
-mlx.img.img_ptr = mlx_new_image(mlx.mlx_ptr, WIN_WIDTH, WIN_HEIGHT);
-
-mlx.img.data = (int *)mlx_get_data_addr(mlx.img.img_ptr, &mlx.img.bpp, &mlx.img.size_l,
-		&mlx.img.endian);
 draw_ray_casting(&mlx);
-mlx_hook(mlx.win, 2, 1L<<0, close, &mlx);
+mlx_hook(mlx.win, 2, 1L<<0, press_key, &mlx);
 mlx_put_image_to_window(mlx.mlx_ptr, mlx.win, mlx.img.img_ptr, 0, 0);
+mlx_string_put(mlx.mlx_ptr, mlx.win, 100, 100, 0xFFFFFF, ft_itoa(mlx.pos.posX));
+mlx_string_put(mlx.mlx_ptr, mlx.win, 100, 110, 0xFFFFFF, ft_itoa(mlx.pos.posY));
+mlx_string_put(mlx.mlx_ptr, mlx.win, 100, 120, 0xFFFFFF, ft_itoa(mlx.pos.dirX));
+mlx_string_put(mlx.mlx_ptr, mlx.win, 100, 130, 0xFFFFFF, ft_itoa(mlx.pos.dirY));
+mlx_string_put(mlx.mlx_ptr, mlx.win, 100, 140, 0xFFFFFF, ft_itoa(mlx.pos.planeX));
+mlx_string_put(mlx.mlx_ptr, mlx.win, 100, 150, 0xFFFFFF, ft_itoa(mlx.pos.planeY));
 // mlx_hook(mlx.win, 2, 1L<<0, close, &posX);
 mlx_loop(mlx.mlx_ptr);
 
