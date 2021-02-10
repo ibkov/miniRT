@@ -180,7 +180,7 @@ int draw_ray_casting(t_mlx *mlx)
 
 void init_position(pos_gamer *pos)
 {
-  pos->posX = 19;
+  pos->posX = 4;
   pos->posY = 12;  //x and y start position
   pos->dirX = -1;
   pos->dirY = 0; //initial direction vector
@@ -195,7 +195,7 @@ int press_key(int keycode, t_mlx *mlx)
       // mlx_clear_window(mlx->mlx_ptr, mlx->win);
       // mlx_destroy_image(mlx->mlx_ptr, mlx->win);
       mlx->img.img_ptr = mlx_new_image(mlx->mlx_ptr, WIN_WIDTH, WIN_HEIGHT);
-      mlx->pos.posX--;
+      mlx->pos.posX -= 1;
       draw_ray_casting(mlx);
       mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
       mlx_string_put(mlx->mlx_ptr, mlx->win, 100, 100, 0xFFFFFF, ft_itoa(mlx->pos.posX));
@@ -208,23 +208,35 @@ int press_key(int keycode, t_mlx *mlx)
     if (keycode == 125)
     {
       mlx_clear_window(mlx->mlx_ptr, mlx->win);
-      mlx->pos.posX++;
+      mlx->pos.posX += 1;
       draw_ray_casting(mlx);
       mlx_clear_window(mlx->mlx_ptr, mlx->win);
       mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
     }
     if (keycode == 123)
     {
+      double rotSpeed = 0.5;
       mlx_clear_window(mlx->mlx_ptr, mlx->win);
-      mlx->pos.dirY -= 0.2;
+      double oldDirX = mlx->pos.dirX;
+      mlx->pos.dirX = mlx->pos.dirX * cos(rotSpeed) - mlx->pos.dirY * sin(rotSpeed);
+      mlx->pos.dirY = oldDirX * sin(rotSpeed) + mlx->pos.dirY * cos(rotSpeed);
+      double oldPlaneX = mlx->pos.planeX;
+      mlx->pos.planeX = mlx->pos.planeX * cos(rotSpeed) - mlx->pos.planeY * sin(rotSpeed);
+      mlx->pos.planeY = oldPlaneX * sin(rotSpeed) + mlx->pos.planeY * cos(rotSpeed);
       draw_ray_casting(mlx);
       mlx_clear_window(mlx->mlx_ptr, mlx->win);
       mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
     }
      if (keycode == 124)
     {
+      double rotSpeed = 0.5;
       mlx_clear_window(mlx->mlx_ptr, mlx->win);
-      mlx->pos.dirY += 0.2;
+      double oldDirX = mlx->pos.dirX;
+      mlx->pos.dirX = mlx->pos.dirX * cos(-rotSpeed) - mlx->pos.dirY * sin(-rotSpeed);
+      mlx->pos.dirY = oldDirX * sin(-rotSpeed) + mlx->pos.dirY * cos(-rotSpeed);
+      double oldPlaneX = mlx->pos.planeX;
+      mlx->pos.planeX = mlx->pos.planeX * cos(-rotSpeed) - mlx->pos.planeY * sin(-rotSpeed);
+      mlx->pos.planeY = oldPlaneX * sin(-rotSpeed) + mlx->pos.planeY * cos(-rotSpeed);
       draw_ray_casting(mlx);
       mlx_clear_window(mlx->mlx_ptr, mlx->win);
       mlx_put_image_to_window(mlx->mlx_ptr, mlx->win, mlx->img.img_ptr, 0, 0);
